@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase configuration and app ID are provided by the environment
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global variables for Firebase instances
+        window.firebaseApp = app;
+        window.firebaseAuth = auth;
+        window.firestoreDb = db;
+
+        // Function to sign in
+        async function authenticateUser() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error("Error during Firebase authentication:", error);
+                document.getElementById('message').textContent = 'Authentication failed. Please try again.';
+                document.getElementById('message').classList.remove('text-green-500');
+                document.getElementById('message').classList.add('text-red-500');
+            }
+        }
+
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, (user) => {
+            const userIdDisplay = document.getElementById('userIdDisplay');
+            if (user) {
+                // User is signed in
+                const userId = user.uid;
+                userIdDisplay.textContent = `User ID: ${userId}`;
+                userIdDisplay.classList.remove('hidden');
+                console.log('User signed in with UID:', userId);
+            } else {
+                // User is signed out
+                userIdDisplay.textContent = 'Not authenticated.';
+                userIdDisplay.classList.add('hidden'); // Hide if not authenticated
+                console.log('No user signed in.');
+            }
+        });
+
+        // Authenticate when the script loads
+        authenticateUser();
+    </script>
+    <style>
+        /* Inter font for better readability */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md sm:max-w-sm md:max-w-md lg:max-w-lg">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Login</h2>
+
+    <form id="loginForm" class="space-y-4">
+        <div>
+            <label for="username" class="block text-sm font-medium text-gray-700">Username or Email</label>
+            <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username or email"
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
+                    required
+            >
+        </div>
+        <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
+                    required
+            >
+        </div>
+        <button
+                type="submit"
+                class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md font-semibold text-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out shadow-lg"
+        >
+            Log In
+        </button>
+    </form>
+
+    <div id="message" class="mt-6 text-center text-sm font-medium">
+        <!-- Messages will be displayed here -->
+    </div>
+
+    <div id="userIdDisplay" class="mt-4 text-center text-xs text-gray-500 hidden">
+        <!-- User ID will be displayed here -->
+    </div>
+</div>
+
+<script type="module" src="./js/login.js"></script>
+
+</body>
+</html>
